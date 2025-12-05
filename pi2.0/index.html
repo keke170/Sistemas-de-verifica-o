@@ -1,0 +1,1777 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Sistema de Esteira - Login/Dashboard</title>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+    />
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <style>
+      /* ===== RESET & BASE ===== */
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+      html,
+      body {
+        height: 100%;
+        font-family: "Segoe UI", system-ui, sans-serif;
+      }
+
+      /* ===== LOGIN PAGE ===== */
+      .login-page {
+        background: linear-gradient(
+          180deg,
+          #0b1220 0%,
+          #0f172a 50%,
+          #000000 100%
+        );
+        color: #e6eef8;
+        min-height: 100vh;
+        display: grid;
+        grid-template-columns: 1fr 420px;
+        gap: 40px;
+        align-items: center;
+        padding: 40px;
+      }
+
+      .left-panel {
+        padding: 36px;
+        border-radius: 16px;
+        background: linear-gradient(
+          135deg,
+          rgba(7, 18, 38, 0.6),
+          rgba(10, 12, 20, 0.4)
+        );
+        border: 1px solid rgba(148, 163, 184, 0.06);
+        box-shadow: 0 20px 50px rgba(2, 6, 23, 0.6) inset;
+        display: flex;
+        flex-direction: column;
+        gap: 28px;
+        min-height: 420px;
+      }
+
+      .branding .logo {
+        font-size: 48px;
+        width: 72px;
+        height: 72px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: linear-gradient(90deg, #03284b, #0b4a78);
+        border-radius: 12px;
+        box-shadow: 0 8px 20px rgba(3, 36, 75, 0.35);
+        margin-bottom: 12px;
+      }
+
+      .branding h2 {
+        color: #8ccdf6;
+        margin-bottom: 6px;
+        font-size: 1.5rem;
+      }
+
+      .branding p {
+        color: #9aa7b8;
+        max-width: 62%;
+        line-height: 1.3;
+        font-size: 0.9rem;
+      }
+
+      .login-panel {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .card {
+        width: 100%;
+        max-width: 420px;
+        background: #ffffff;
+        border: 1px solid #ffbaba;
+        padding: 20px;
+        border-radius: 14px;
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+        color: #d5e2ff;
+      }
+
+      .card h1 {
+        color: #0e396e;
+        margin-bottom: 8px;
+        font-size: 1.8rem;
+      }
+
+      .card p {
+        color: #9aa7b8;
+        margin-bottom: 24px;
+        font-size: 0.9rem;
+      }
+
+      /* ===== FORM STYLES ===== */
+      .field {
+        margin-bottom: 18px;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 6px;
+        color: #e6eef8;
+        font-size: 0.9rem;
+      }
+
+      .field input {
+        width: 100%;
+        padding: 12px 14px;
+        border-radius: 8px;
+        border: 1px solid #334155;
+        background: #1e293b;
+        color: #e6eef8;
+        font-size: 1rem;
+        transition: border-color 0.2s;
+      }
+
+      .field input:focus {
+        outline: none;
+        border-color: #3b82f6;
+      }
+
+      .password-wrap {
+        position: relative;
+      }
+
+      .password-wrap button {
+        position: absolute;
+        right: 12px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: none;
+        border: none;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 4px;
+      }
+
+      .actions {
+        margin: 24px 0 16px 0;
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+      }
+
+      .btn {
+        padding: 14px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        font-size: 0.95rem;
+        transition: all 0.2s;
+      }
+
+      .btn.primary {
+        background: linear-gradient(90deg, #3b82f6, #1d4ed8);
+        color: white;
+      }
+
+      .btn.primary:hover {
+        background: linear-gradient(90deg, #2563eb, #1e40af);
+      }
+
+      .btn.ghost {
+        background: transparent;
+        color: #3b82f6;
+        border: 1px solid #3b82f6;
+      }
+
+      .btn.ghost:hover {
+        background: rgba(59, 130, 246, 0.1);
+      }
+
+      .links {
+        text-align: center;
+        margin-top: 16px;
+      }
+
+      .links a {
+        color: #60a5fa;
+        text-decoration: none;
+        font-size: 0.9rem;
+      }
+
+      .links a:hover {
+        text-decoration: underline;
+      }
+
+      .feedback {
+        margin-top: 16px;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 0.9rem;
+      }
+
+      /* ===== DASHBOARD STYLES ===== */
+
+      .dashboard-page {
+        display: none;
+        min-height: 100vh;
+        background: #eae9e8;
+      }
+
+      .dashboard-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 18px 24px;
+        background: linear-gradient(90deg, #e5e6e7, #bfc1c3);
+        color: #4f5259;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      }
+
+      .dashboard-header-left h2 {
+        font-size: 1.3rem;
+        font-weight: 600;
+      }
+
+      .dashboard-header-right {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+      }
+
+      .user-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .avatar {
+        width: 38px;
+        height: 38px;
+        background: #4f5a74;
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+      }
+
+      .email {
+        color: #4f5259;
+        font-size: 0.9rem;
+      }
+
+      .logout-btn {
+        background: rgba(239, 68, 68, 0.08);
+        color: #4f5259;
+        border: 1px solid #95979b;
+        padding: 8px 16px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.9rem;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.2s;
+      }
+
+      .logout-btn:hover {
+        background: rgba(239, 68, 68, 0.18);
+      }
+
+      .dashboard-menu {
+        display: flex;
+        gap: 8px;
+        padding: 12px 20px;
+        background: #4f5a74;
+        overflow-x: auto;
+        border-bottom: 1px solid #80889b;
+      }
+
+      .dashboard-menu .menu-link {
+        color: #eae9e8;
+        padding: 10px 16px;
+        border-radius: 8px;
+        cursor: pointer;
+        text-decoration: none;
+        font-size: 0.9rem;
+        white-space: nowrap;
+        transition: all 0.2s;
+      }
+
+      .dashboard-menu .menu-link:hover {
+        background: #80889b;
+        color: #ffffff;
+      }
+
+      .dashboard-menu .menu-link.active {
+        background: #95979b;
+        color: #fff;
+        font-weight: 600;
+      }
+
+      .dashboard-content {
+        padding: 24px;
+        background: #eae9e8;
+        min-height: calc(100vh - 120px);
+      }
+
+      /* ===== SECTIONS ===== */
+      .section {
+        display: none;
+        animation: fadeIn 0.3s ease;
+      }
+
+      .section.active {
+        display: block;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .section h3 {
+        color: #1e293b;
+        margin-bottom: 12px;
+        font-size: 1.5rem;
+      }
+
+      .section p {
+        color: #64748b;
+        margin-bottom: 24px;
+        line-height: 1.5;
+      }
+
+      /* ===== STATS CARDS ===== */
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+      }
+
+      .stat-card {
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        border-left: 4px solid #2a4e7a;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+      }
+
+      .stat-card h3 {
+        color: #475569;
+        font-size: 1rem;
+        margin-bottom: 8px;
+      }
+
+      .stat-card .value {
+        color: #1e293b;
+        font-size: 2rem;
+        font-weight: bold;
+      }
+
+      .status-area {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 20px;
+        margin-top: 30px;
+      }
+
+      .status-area .card-status {
+        background: linear-gradient(135deg, #eef2f7, #d9e4ee);
+        border-left: 6px solid #2a4e7a;
+        padding: 24px;
+        border-radius: 12px;
+        text-align: center;
+      }
+
+      /* ===== BUTTONS ===== */
+      .acoes-rapidas {
+        display: flex;
+        gap: 12px;
+        margin: 24px 0;
+      }
+
+      .btn-dashboard {
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.2s;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.9rem;
+      }
+
+      .btn-primary {
+        background: #80889b;
+        color: white;
+      }
+      .btn-primary:hover {
+        background: #4f5a74;
+      }
+
+      .btn-success {
+        background: #4f5a74;
+        color: white;
+      }
+      .btn-success:hover {
+        background: #80889b;
+      }
+
+      .btn-warning {
+        background: #80889b;
+        color: white;
+      }
+      .btn-warning:hover {
+        background: #4f5a74;
+      }
+
+      .btn-danger {
+        background: #4f5a74;
+        color: white;
+      }
+      .btn-danger:hover {
+        background: #80889b;
+      }
+
+      /* ===== FORM GROUPS ===== */
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 6px;
+        color: #475569;
+        font-weight: 500;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        font-size: 0.9rem;
+        transition: border-color 0.2s;
+      }
+
+      .form-group input:focus {
+        outline: none;
+        border-color: #3b82f6;
+      }
+
+      /* ===== CHARTS ===== */
+      .charts-area {
+        margin-top: 30px;
+        background: white;
+        padding: 24px;
+        border-radius: 12px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+      }
+
+      /* ===== MODAL ===== */
+      .modal {
+        display: none;
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 2000;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+
+      .modal[aria-hidden="false"] {
+        display: flex;
+      }
+
+      .modal-content {
+        background: #fff;
+        border-radius: 12px;
+        width: 100%;
+        max-width: 520px;
+        box-shadow: 0 20px 40px rgba(2, 6, 23, 0.2);
+        animation: modalSlide 0.3s ease;
+      }
+
+      @keyframes modalSlide {
+        from {
+          opacity: 0;
+          transform: translateY(-20px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 20px;
+        border-bottom: 1px solid #e5e7eb;
+      }
+
+      .modal-header h3 {
+        color: #1e293b;
+        font-size: 1.2rem;
+      }
+
+      .close {
+        font-size: 1.5rem;
+        color: #94a3b8;
+        cursor: pointer;
+        padding: 0 8px;
+      }
+
+      .close:hover {
+        color: #64748b;
+      }
+
+      #form-cor {
+        padding: 20px;
+      }
+
+      .form-actions {
+        display: flex;
+        justify-content: flex-end;
+        gap: 12px;
+        margin-top: 24px;
+      }
+
+      /* ===== TABLE ===== */
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        margin-top: 20px;
+      }
+
+      th {
+        background: #f8fafc;
+        padding: 16px;
+        text-align: left;
+        color: #475569;
+        font-weight: 600;
+        border-bottom: 2px solid #e5e7eb;
+      }
+
+      td {
+        padding: 16px;
+        border-bottom: 1px solid #e5e7eb;
+        color: #64748b;
+      }
+
+      tr:hover {
+        background: #f8fafc;
+      }
+
+      .color-badge {
+        display: inline-block;
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid #e5e7eb;
+      }
+
+      /* ===== RESPONSIVE ===== */
+      @media (max-width: 768px) {
+        .login-page {
+          grid-template-columns: 1fr;
+          padding: 20px;
+        }
+
+        .left-panel {
+          display: none;
+        }
+
+        .stats-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .acoes-rapidas {
+          flex-direction: column;
+        }
+
+        .dashboard-menu {
+          padding: 8px 12px;
+          gap: 4px;
+        }
+
+        .dashboard-menu .menu-link {
+          padding: 8px 12px;
+          font-size: 0.8rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <!-- ===== LOGIN PAGE ===== -->
+    <div id="loginPage" class="login-page">
+      <section class="left-panel">
+        <div class="branding">
+          <div class="logo">🏭</div>
+          <h2>SISTEMA DE ESTEIRA AUTOMATIZADA</h2>
+          <p>
+            Separação por Cor — Sistema inteligente para separação automática de
+            peças por reconhecimento de cores
+          </p>
+        </div>
+      </section>
+
+      <section class="login-panel">
+        <div class="card">
+          <h1>Entrar no Sistema</h1>
+          <p>Digite suas credenciais para acessar o painel</p>
+
+          <form id="login-form" autocomplete="off" novalidate>
+            <div class="field">
+              <label for="email">Email</label>
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="seu@email.com"
+                required
+              />
+            </div>
+
+            <div class="field">
+              <label for="password">Senha</label>
+              <div class="password-wrap">
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  placeholder="••••••••"
+                  required
+                />
+                <button
+                  type="button"
+                  id="toggle-password"
+                  aria-label="Mostrar senha"
+                >
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn primary">
+                <i class="fa-solid fa-right-to-bracket"></i> ENTRAR
+              </button>
+              <button type="button" class="btn ghost" id="btn-guest">
+                <i class="fa-solid fa-user-clock"></i> Acesso Rápido
+              </button>
+            </div>
+
+            <div class="links">
+              <a href="#" id="show-signup">Criar nova conta</a>
+            </div>
+
+            <div id="feedback" class="feedback" aria-live="polite"></div>
+          </form>
+
+          <form
+            id="signup-form"
+            autocomplete="off"
+            novalidate
+            style="display: none"
+          >
+            <div class="field">
+              <label for="signup-email">Email</label>
+              <input
+                id="signup-email"
+                name="email"
+                type="email"
+                placeholder="seu@email.com"
+                required
+              />
+            </div>
+
+            <div class="field">
+              <label for="signup-password">Senha</label>
+              <div class="password-wrap">
+                <input
+                  id="signup-password"
+                  name="password"
+                  type="password"
+                  placeholder="Mínimo 6 caracteres"
+                  required
+                />
+                <button type="button" class="toggle-password">
+                  <i class="fa-solid fa-eye"></i>
+                </button>
+              </div>
+            </div>
+
+            <div class="actions">
+              <button type="submit" class="btn primary">
+                <i class="fa-solid fa-user-plus"></i> CRIAR CONTA
+              </button>
+              <button type="button" class="btn ghost" id="btn-back-login">
+                <i class="fa-solid fa-arrow-left"></i> Voltar ao Login
+              </button>
+            </div>
+
+            <div id="signup-feedback" class="feedback" aria-live="polite"></div>
+          </form>
+        </div>
+      </section>
+    </div>
+
+    <!-- ===== DASHBOARD PAGE ===== -->
+
+    <div id="dashboardPage" class="dashboard-page">
+      <header class="dashboard-header">
+        <div class="dashboard-header-left">
+          <h2>🏭 Painel de Controle - Sistema de Esteira</h2>
+        </div>
+
+        <div class="dashboard-header-right">
+          <div class="user-info">
+            <span id="userAvatar" class="avatar"></span>
+            <span id="userEmail" class="email"></span>
+          </div>
+          <button id="logoutBtn" class="logout-btn">
+            <i class="fa-solid fa-right-from-bracket"></i> Sair
+          </button>
+        </div>
+      </header>
+
+      <nav class="dashboard-menu">
+        <a data-section="Inicio" class="menu-link active">
+          <i class="fa-solid fa-home"></i> Início
+        </a>
+        <a data-section="Cadastro" class="menu-link">
+          <i class="fa-solid fa-palette"></i> Cadastro de Cores
+        </a>
+        <a data-section="Simulacao" class="menu-link">
+          <i class="fa-solid fa-play"></i> Simulação
+        </a>
+        <a data-section="Monitoramento" class="menu-link">
+          <i class="fa-solid fa-chart-line"></i> Monitoramento
+        </a>
+        <a data-section="Relatorios" class="menu-link">
+          <i class="fa-solid fa-chart-bar"></i> Relatórios
+        </a>
+        <a data-section="Manutencao" class="menu-link">
+          <i class="fa-solid fa-tools"></i> Manutenção
+        </a>
+        <a data-section="Configuracao" class="menu-link">
+          <i class="fa-solid fa-cog"></i> Configuração
+        </a>
+        <a data-section="Ajuda" class="menu-link">
+          <i class="fa-solid fa-question-circle"></i> Ajuda
+        </a>
+      </nav>
+
+      <main class="dashboard-content">
+        <!-- Seção: Início -->
+        <section id="sec-Inicio" class="section active">
+          <h3>Bem-vindo ao Painel de Controle</h3>
+          <p>
+            Monitoramento e controle do sistema de separação automática por
+            cores
+          </p>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>Produção de hoje</h3>
+              <div class="value">320 peças</div>
+            </div>
+            <div class="stat-card">
+              <h3>Taxa de Acerto</h3>
+              <div class="value">98%</div>
+            </div>
+            <div class="stat-card">
+              <h3>Tempo Médio</h3>
+              <div class="value">2.4s</div>
+            </div>
+            <div class="stat-card">
+              <h3>Status do sistema</h3>
+              <div class="value" style="color: #0b1220">Online</div>
+            </div>
+          </div>
+
+          <div class="status-area">
+            <div class="card-status">
+              <h3>Última Atividade</h3>
+              <div class="value">12:45 PM</div>
+              <p>Separação de 24 peças azuis</p>
+            </div>
+            <div class="card-status">
+              <h3>Servos Ativos</h3>
+              <div class="value">4/8</div>
+              <p>50% da capacidade</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Seção: Cadastro de Cores -->
+        <section id="sec-Cadastro" class="section">
+          <h3>Cadastro de Cores</h3>
+          <p>Gerencie as cores para separação automática no sistema</p>
+
+          <div class="acoes-rapidas">
+            <button class="btn-dashboard btn-primary" id="btn-nova-cor">
+              <i class="fa-solid fa-plus"></i> Nova Cor
+            </button>
+            <button class="btn-dashboard btn-warning" id="btn-ver-cores">
+              <i class="fa-solid fa-list"></i> Ver Cores Cadastradas
+            </button>
+          </div>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>Cores Cadastradas</h3>
+              <div class="value" id="total-cores">0</div>
+            </div>
+            <div class="stat-card">
+              <h3>Servos Configurados</h3>
+              <div class="value">4</div>
+            </div>
+          </div>
+
+          <div id="lista-cores" style="margin-top: 30px"></div>
+        </section>
+
+        <!-- Seção: Simulação -->
+        <section id="sec-Simulacao" class="section">
+          <h3>Simulação do Sistema</h3>
+          <p>Teste diferentes configurações e parâmetros do sistema</p>
+
+          <div class="form-group" style="max-width: 300px">
+            <label for="sim-vel">Velocidade da Esteira (m/s)</label>
+            <input
+              id="sim-vel"
+              type="number"
+              min="0.1"
+              max="2.0"
+              step="0.1"
+              value="0.5"
+            />
+          </div>
+
+          <div class="form-group" style="max-width: 300px">
+            <label for="sim-cores">Quantidade de Cores</label>
+            <input id="sim-cores" type="number" min="1" max="8" value="4" />
+          </div>
+
+          <div class="acoes-rapidas">
+            <button id="btn-run-sim" class="btn-dashboard btn-success">
+              <i class="fa-solid fa-play"></i> Executar Simulação
+            </button>
+            <button id="btn-stop-sim" class="btn-dashboard btn-danger">
+              <i class="fa-solid fa-stop"></i> Parar Simulação
+            </button>
+          </div>
+
+          <div
+            id="sim-result"
+            style="
+              margin-top: 24px;
+              padding: 16px;
+              background: #f0f9ff;
+              border-radius: 8px;
+            "
+          >
+            <h4 style="color: #3b82f6; margin-bottom: 8px">
+              Resultado da Simulação
+            </h4>
+            <p>Clique em "Executar Simulação" para iniciar o teste</p>
+          </div>
+        </section>
+
+        <!-- Seção: Monitoramento -->
+        <section id="sec-Monitoramento" class="section">
+          <h3>Monitoramento em Tempo Real</h3>
+          <p>Acompanhe o status atual do sistema de esteira</p>
+
+          <div class="stats-grid">
+            <div class="stat-card">
+              <h3>Status do Sistema</h3>
+              <div class="value" style="color: #0b1220">Operacional</div>
+              <p>Todos os sensores OK</p>
+            </div>
+            <div class="stat-card">
+              <h3>Última Peça</h3>
+              <div class="value">Azul</div>
+              <p>Processada há 2 minutos</p>
+            </div>
+            <div class="stat-card">
+              <h3>Temperatura</h3>
+              <div class="value">42°C</div>
+              <p>Dentro do normal</p>
+            </div>
+            <div class="stat-card">
+              <h3>Uptime</h3>
+              <div class="value">99.8%</div>
+              <p>24/7 operacional</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Seção: Relatórios -->
+        <section id="sec-Relatorios" class="section">
+          <h3>Relatórios de Desempenho</h3>
+          <p>Análise detalhada do desempenho do sistema</p>
+
+          <div class="charts-area">
+            <canvas id="graficoCombinado"></canvas>
+          </div>
+
+          <div class="stats-grid" style="margin-top: 30px">
+            <div class="stat-card">
+              <h3>Total Processado</h3>
+              <div class="value">1,234 peças</div>
+              <p>Desde o início</p>
+            </div>
+            <div class="stat-card">
+              <h3>Eficiência</h3>
+              <div class="value">97.5%</div>
+              <p>Taxa média de acerto</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- Seção: Manutenção -->
+        <section id="sec-Manutencao" class="section">
+          <h3>Manutenção do Sistema</h3>
+          <p>
+            Agende e acompanhe atividades de manutenção preventiva e corretiva
+          </p>
+
+          <div class="stat-card" style="max-width: 600px">
+            <h3>Próxima Manutenção</h3>
+            <div class="value" style="color: #0b1220">Em 5 dias</div>
+            <p>Verificação de sensores e limpeza dos servos</p>
+          </div>
+        </section>
+
+        <!-- Seção: Configuração -->
+        <section id="sec-Configuracao" class="section">
+          <h3>Configurações do Sistema</h3>
+          <p>Ajuste os parâmetros e configurações gerais do sistema</p>
+
+          <div class="form-group" style="max-width: 400px">
+            <label for="config-velocidade">Velocidade Padrão (m/s)</label>
+            <input
+              id="config-velocidade"
+              type="number"
+              min="0.1"
+              max="1.5"
+              step="0.1"
+              value="0.5"
+            />
+          </div>
+
+          <div class="form-group" style="max-width: 400px">
+            <label for="config-timeout">Timeout de Processamento (ms)</label>
+            <input
+              id="config-timeout"
+              type="number"
+              min="100"
+              max="5000"
+              step="100"
+              value="1000"
+            />
+          </div>
+
+          <button
+            id="btn-salvar-config"
+            class="btn-dashboard btn-primary"
+            style="margin-top: 20px"
+          >
+            <i class="fa-solid fa-save"></i> Salvar Configurações
+          </button>
+        </section>
+
+        <!-- Seção: Ajuda -->
+        <section id="sec-Ajuda" class="section">
+          <h3>Ajuda e Suporte</h3>
+          <p>Documentação e informações de suporte do sistema</p>
+
+          <div class="stat-card">
+            <h3>Contato Suporte</h3>
+            <p>Email: suporte@sistemaesteira.com</p>
+            <p>Telefone: (11) 99999-9999</p>
+            <p>Horário: 8h às 18h (Seg-Sex)</p>
+          </div>
+        </section>
+      </main>
+    </div>
+
+    <!-- ===== MODAL DE CORES ===== -->
+    <div id="modal-cor" class="modal" aria-hidden="true">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 id="modal-cor-titulo">Cadastrar Nova Cor</h3>
+          <span class="close" id="modal-close">&times;</span>
+        </div>
+        <form id="form-cor">
+          <input type="hidden" id="cor-id" />
+          <div class="form-group">
+            <label for="cor-nome">Nome da Cor:</label>
+            <input
+              type="text"
+              id="cor-nome"
+              placeholder="Ex: Vermelho, Azul, Verde"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="cor-hex">Cor (Hexadecimal):</label>
+            <input
+              type="color"
+              id="cor-hex"
+              value="#ff0000"
+              required
+              style="height: 40px; width: 100%"
+            />
+          </div>
+          <div class="form-group">
+            <label for="servo-numero">Número do Servo (1-8):</label>
+            <input
+              type="number"
+              id="servo-numero"
+              min="1"
+              max="8"
+              placeholder="1"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="rgb-min">RGB Mínimo (ex: 200,0,0):</label>
+            <input type="text" id="rgb-min" placeholder="200,0,0" required />
+          </div>
+          <div class="form-group">
+            <label for="rgb-max">RGB Máximo (ex: 255,50,50):</label>
+            <input type="text" id="rgb-max" placeholder="255,50,50" required />
+          </div>
+          <div class="form-actions">
+            <button
+              type="button"
+              class="btn-dashboard btn-danger"
+              id="modal-cancel"
+            >
+              <i class="fa-solid fa-times"></i> Cancelar
+            </button>
+            <button type="submit" class="btn-dashboard btn-success">
+              <i class="fa-solid fa-save"></i> Salvar Cor
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <script>
+      // ===== CONFIGURAÇÃO SUPABASE =====
+      const supabaseUrl = "https://ueuylhxditfrszpejymv.supabase.co";
+      const supabaseKey =
+        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVldXlsaHhkaXRmcnN6cGVqeW12Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjQyOTE5ODAsImV4cCI6MjA3OTg2Nzk4MH0.PdiCBqsQ9qTjkD_G33Vs7QCes7LBgJhcZt1UJLvHY3o";
+      const supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+
+      let currentUser = null;
+
+      // ===== INICIALIZAÇÃO =====
+      document.addEventListener("DOMContentLoaded", () => {
+        verificarSessao();
+        configurarLogin();
+      });
+
+      // ===== VERIFICAÇÃO DE SESSÃO =====
+      async function verificarSessao() {
+        try {
+          const {
+            data: { session },
+            error,
+          } = await supabase.auth.getSession();
+          if (error) throw error;
+
+          if (session && session.user) {
+            currentUser = session.user;
+            mostrarDashboard();
+          } else {
+            mostrarLogin();
+          }
+        } catch (err) {
+          console.error("Erro na verificação de sessão:", err);
+          mostrarLogin();
+        }
+      }
+
+      // ===== CONTROLE DE VISIBILIDADE =====
+      function mostrarLogin() {
+        document.getElementById("loginPage").style.display = "grid";
+        document.getElementById("dashboardPage").style.display = "none";
+      }
+
+      function mostrarDashboard() {
+        document.getElementById("loginPage").style.display = "none";
+        document.getElementById("dashboardPage").style.display = "block";
+        inicializarDashboard();
+      }
+
+      // ===== CONFIGURAÇÃO DO LOGIN =====
+      function configurarLogin() {
+        const loginForm = document.getElementById("login-form");
+        const signupForm = document.getElementById("signup-form");
+        const feedback = document.getElementById("feedback");
+        const signupFeedback = document.getElementById("signup-feedback");
+        const togglePass = document.getElementById("toggle-password");
+        const passwordInput = document.getElementById("password");
+        const btnGuest = document.getElementById("btn-guest");
+        const showSignup = document.getElementById("show-signup");
+        const btnBackLogin = document.getElementById("btn-back-login");
+
+        // Alternar visibilidade da senha
+        if (togglePass && passwordInput) {
+          togglePass.addEventListener("click", () => {
+            const shown = passwordInput.type === "text";
+            passwordInput.type = shown ? "password" : "text";
+            togglePass.innerHTML = shown
+              ? '<i class="fa-solid fa-eye"></i>'
+              : '<i class="fa-solid fa-eye-slash"></i>';
+          });
+        }
+
+        // Alternar entre login e cadastro
+        if (showSignup) {
+          showSignup.addEventListener("click", (e) => {
+            e.preventDefault();
+            loginForm.style.display = "none";
+            signupForm.style.display = "block";
+          });
+        }
+
+        if (btnBackLogin) {
+          btnBackLogin.addEventListener("click", () => {
+            signupForm.style.display = "none";
+            loginForm.style.display = "block";
+          });
+        }
+
+        // Acesso rápido (demo)
+        if (btnGuest) {
+          btnGuest.addEventListener("click", () => {
+            document.getElementById("email").value = "demo@sistema.com";
+            document.getElementById("password").value = "demo123456";
+            feedback.textContent = "Credenciais de demonstração preenchidas.";
+            feedback.style.color = "#10b981";
+            feedback.style.backgroundColor = "#f0fdf4";
+          });
+        }
+
+        // Submit do login
+        if (loginForm) {
+          loginForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            feedback.textContent = "";
+            feedback.style.color = "#ef4444";
+            feedback.style.backgroundColor = "#fef2f2";
+
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+
+            if (!email || !password) {
+              feedback.textContent = "Preencha todos os campos.";
+              return;
+            }
+
+            try {
+              const { data, error } = await supabase.auth.signInWithPassword({
+                email,
+                password,
+              });
+
+              if (error) {
+                feedback.textContent = "Erro no login: " + error.message;
+                return;
+              }
+
+              currentUser = data.user;
+              feedback.textContent = "Login realizado com sucesso!";
+              feedback.style.color = "#10b981";
+              feedback.style.backgroundColor = "#f0fdf4";
+
+              setTimeout(() => mostrarDashboard(), 1000);
+            } catch (err) {
+              console.error("Erro no login:", err);
+              feedback.textContent = "Erro ao conectar com o servidor.";
+            }
+          });
+        }
+
+        // Submit do cadastro
+        if (signupForm) {
+          signupForm.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            signupFeedback.textContent = "";
+            signupFeedback.style.color = "#ef4444";
+            signupFeedback.style.backgroundColor = "#fef2f2";
+
+            const email = document.getElementById("signup-email").value.trim();
+            const password = document.getElementById("signup-password").value;
+
+            if (!email || !password) {
+              signupFeedback.textContent = "Preencha todos os campos.";
+              return;
+            }
+
+            if (password.length < 6) {
+              signupFeedback.textContent =
+                "A senha deve ter pelo menos 6 caracteres.";
+              return;
+            }
+
+            try {
+              const { data, error } = await supabase.auth.signUp({
+                email,
+                password,
+                options: {
+                  data: {
+                    nome: email.split("@")[0],
+                  },
+                },
+              });
+
+              if (error) {
+                signupFeedback.textContent =
+                  "Erro no cadastro: " + error.message;
+                return;
+              }
+
+              signupFeedback.textContent =
+                "Cadastro realizado com sucesso! Verifique seu email.";
+              signupFeedback.style.color = "#10b981";
+              signupFeedback.style.backgroundColor = "#f0fdf4";
+
+              setTimeout(() => {
+                signupForm.style.display = "none";
+                loginForm.style.display = "block";
+                signupFeedback.textContent = "";
+              }, 3000);
+            } catch (err) {
+              console.error("Erro no cadastro:", err);
+              signupFeedback.textContent = "Erro ao conectar com o servidor.";
+            }
+          });
+        }
+      }
+
+      // ===== INICIALIZAÇÃO DO DASHBOARD =====
+      function inicializarDashboard() {
+        if (!currentUser) return;
+
+        // Atualizar informações do usuário
+        const emailEl = document.getElementById("userEmail");
+        const avatarEl = document.getElementById("userAvatar");
+
+        if (emailEl) emailEl.textContent = currentUser.email;
+        if (avatarEl)
+          avatarEl.textContent = currentUser.email.charAt(0).toUpperCase();
+
+        // Configurar logout
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) {
+          logoutBtn.addEventListener("click", async () => {
+            try {
+              const { error } = await supabase.auth.signOut();
+              if (error) throw error;
+              mostrarLogin();
+            } catch (err) {
+              console.error("Erro no logout:", err);
+              alert("Erro ao fazer logout.");
+            }
+          });
+        }
+
+        // Configurar navegação do menu
+        const menuLinks = Array.from(document.querySelectorAll(".menu-link"));
+        menuLinks.forEach((link) => {
+          link.addEventListener("click", (e) => {
+            const target = link.getAttribute("data-section");
+            mostrarSecao(target);
+            menuLinks.forEach((l) => l.classList.remove("active"));
+            link.classList.add("active");
+          });
+        });
+
+        // Configurar botões da seção de cores
+        document
+          .getElementById("btn-nova-cor")
+          ?.addEventListener("click", abrirModalCor);
+        document
+          .getElementById("btn-ver-cores")
+          ?.addEventListener("click", () => {
+            mostrarSecao("Cadastro");
+            carregarListaCores();
+          });
+
+        // Configurar simulação
+        document
+          .getElementById("btn-run-sim")
+          ?.addEventListener("click", executarSimulacao);
+        document
+          .getElementById("btn-stop-sim")
+          ?.addEventListener("click", pararSimulacao);
+
+        // Configurar modal de cores
+        configurarModalCores();
+
+        // Inicializar gráficos
+        inicializarGraficos();
+
+        // Carregar dados iniciais
+        carregarListaCores();
+      }
+
+      // ===== CONTROLE DE SEÇÕES =====
+      function mostrarSecao(id) {
+        const sections = document.querySelectorAll(".section");
+        sections.forEach((s) => s.classList.remove("active"));
+
+        const toShow = document.getElementById("sec-" + id);
+        if (toShow) toShow.classList.add("active");
+      }
+
+      // ===== MODAL DE CORES =====
+      function configurarModalCores() {
+        const modal = document.getElementById("modal-cor");
+        const modalClose = document.getElementById("modal-close");
+        const modalCancel = document.getElementById("modal-cancel");
+
+        // Fechar modal
+        if (modalClose) modalClose.addEventListener("click", fecharModalCor);
+        if (modalCancel) modalCancel.addEventListener("click", fecharModalCor);
+
+        window.addEventListener("click", (e) => {
+          if (e.target === modal) fecharModalCor();
+        });
+
+        // Submit do formulário
+        const formCor = document.getElementById("form-cor");
+        if (formCor) {
+          formCor.addEventListener("submit", async (e) => {
+            e.preventDefault();
+            await salvarCor();
+          });
+        }
+      }
+
+      function abrirModalCor() {
+        const modal = document.getElementById("modal-cor");
+        if (!modal) return;
+
+        modal.style.display = "flex";
+        modal.setAttribute("aria-hidden", "false");
+
+        // Limpar formulário
+        document.getElementById("cor-id").value = "";
+        document.getElementById("cor-nome").value = "";
+        document.getElementById("cor-hex").value = "#ff0000";
+        document.getElementById("servo-numero").value = 1;
+        document.getElementById("rgb-min").value = "";
+        document.getElementById("rgb-max").value = "";
+      }
+
+      function fecharModalCor() {
+        const modal = document.getElementById("modal-cor");
+        if (!modal) return;
+
+        modal.style.display = "none";
+        modal.setAttribute("aria-hidden", "true");
+      }
+
+      async function salvarCor() {
+        const id = document.getElementById("cor-id").value || null;
+        const nome = document.getElementById("cor-nome").value.trim();
+        const hex = document.getElementById("cor-hex").value;
+        const servo = parseInt(
+          document.getElementById("servo-numero").value || 1
+        );
+        const rgbMin = document.getElementById("rgb-min").value.trim();
+        const rgbMax = document.getElementById("rgb-max").value.trim();
+
+        // Validação
+        if (!nome || !hex || !rgbMin || !rgbMax) {
+          alert("Preencha todos os campos obrigatórios.");
+          return;
+        }
+
+        if (servo < 1 || servo > 8) {
+          alert("O número do servo deve estar entre 1 e 8.");
+          return;
+        }
+
+        const payload = {
+          nome,
+          hex,
+          servo,
+          rgb_min: rgbMin,
+          rgb_max: rgbMax,
+          usuario: currentUser?.email || null,
+          criado_em: new Date().toISOString(),
+        };
+
+        try {
+          // Tentar salvar no Supabase
+          const { data, error } = await supabase
+            .from("cores")
+            .insert([payload]);
+
+          if (error) {
+            console.warn(
+              "Erro ao salvar no Supabase, usando localStorage:",
+              error.message
+            );
+            salvarCorLocal(payload);
+          }
+
+          fecharModalCor();
+          carregarListaCores();
+
+          // Feedback visual
+          const feedback = document.createElement("div");
+          feedback.textContent = "Cor salva com sucesso!";
+          feedback.style.cssText =
+            "position:fixed;top:20px;right:20px;background:#10b981;color:white;padding:12px;border-radius:8px;z-index:9999;";
+          document.body.appendChild(feedback);
+
+          setTimeout(() => feedback.remove(), 3000);
+        } catch (err) {
+          console.error("Erro ao salvar cor:", err);
+          salvarCorLocal(payload);
+          fecharModalCor();
+          carregarListaCores();
+        }
+      }
+
+      function salvarCorLocal(payload) {
+        const key = "cores_local";
+        const arr = JSON.parse(localStorage.getItem(key) || "[]");
+        arr.push(Object.assign({ id: Date.now() }, payload));
+        localStorage.setItem(key, JSON.stringify(arr));
+      }
+
+      // ===== LISTA DE CORES =====
+      async function carregarListaCores() {
+        const container = document.getElementById("lista-cores");
+        const totalCores = document.getElementById("total-cores");
+
+        if (!container) return;
+
+        container.innerHTML =
+          '<p style="color:#64748b;">Carregando cores...</p>';
+
+        try {
+          // Tentar buscar do Supabase
+          const { data, error } = await supabase
+            .from("cores")
+            .select("*")
+            .order("criado_em", { ascending: false })
+            .limit(50);
+
+          if (error) throw error;
+
+          renderizarCores(data || []);
+        } catch (err) {
+          console.warn(
+            "Falha ao carregar do Supabase, usando localStorage:",
+            err.message
+          );
+
+          // Fallback para localStorage
+          const arr = JSON.parse(localStorage.getItem("cores_local") || "[]");
+          renderizarCores(arr);
+        }
+      }
+
+      function renderizarCores(list) {
+        const container = document.getElementById("lista-cores");
+        const totalCores = document.getElementById("total-cores");
+
+        if (!container) return;
+
+        if (!list || list.length === 0) {
+          container.innerHTML =
+            '<div style="padding:20px;background:#f8fafc;border-radius:8px;text-align:center;color:#64748b;">Nenhuma cor cadastrada ainda.</div>';
+          if (totalCores) totalCores.textContent = "0";
+          return;
+        }
+
+        if (totalCores) totalCores.textContent = list.length.toString();
+
+        const table = document.createElement("table");
+        table.innerHTML = `
+                <thead>
+                    <tr>
+                        <th>Cor</th>
+                        <th>Nome</th>
+                        <th>Servo</th>
+                        <th>RGB Mínimo</th>
+                        <th>RGB Máximo</th>
+                        <th>Criado em</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${list
+                      .map(
+                        (item) => `
+                        <tr>
+                            <td>
+                                <span class="color-badge" style="background:${
+                                  item.hex || "#999"
+                                }"></span>
+                                <span style="margin-left:8px;font-size:0.9rem;">${
+                                  item.hex || ""
+                                }</span>
+                            </td>
+                            <td>${item.nome || "-"}</td>
+                            <td>${item.servo || "-"}</td>
+                            <td>${item.rgb_min || "-"}</td>
+                            <td>${item.rgb_max || "-"}</td>
+                            <td style="font-size:0.9rem;color:#94a3b8;">
+                                ${
+                                  item.criado_em
+                                    ? new Date(
+                                        item.criado_em
+                                      ).toLocaleDateString("pt-BR")
+                                    : "-"
+                                }
+                            </td>
+                        </tr>
+                    `
+                      )
+                      .join("")}
+                </tbody>
+            `;
+
+        container.innerHTML = "";
+        container.appendChild(table);
+      }
+
+      // ===== SIMULAÇÃO =====
+      function executarSimulacao() {
+        const velocidade =
+          parseFloat(document.getElementById("sim-vel").value) || 0.5;
+        const cores = parseInt(document.getElementById("sim-cores").value) || 4;
+
+        const resultado = document.getElementById("sim-result");
+        resultado.innerHTML = `
+                <h4 style="color:#10b981; margin-bottom:8px;">
+                    <i class="fa-solid fa-check-circle"></i> Simulação em Execução
+                </h4>
+                <p>Velocidade: <strong>${velocidade} m/s</strong></p>
+                <p>Cores simuladas: <strong>${cores}</strong></p>
+                <p>Status: <span style="color:#10b981;">Processando...</span></p>
+                <div style="margin-top:12px;padding:8px;background:#f0fdf4;border-radius:4px;">
+                    <small><i class="fa-solid fa-info-circle"></i> Simulação iniciada às ${new Date().toLocaleTimeString(
+                      "pt-BR"
+                    )}</small>
+                </div>
+            `;
+      }
+
+      function pararSimulacao() {
+        const resultado = document.getElementById("sim-result");
+        resultado.innerHTML = `
+                <h4 style="color:#ef4444; margin-bottom:8px;">
+                    <i class="fa-solid fa-stop-circle"></i> Simulação Parada
+                </h4>
+                <p>Simulação interrompida pelo usuário.</p>
+                <div style="margin-top:12px;padding:8px;background:#fef2f2;border-radius:4px;">
+                    <small><i class="fa-solid fa-info-circle"></i> Última execução: ${new Date().toLocaleTimeString(
+                      "pt-BR"
+                    )}</small>
+                </div>
+            `;
+      }
+
+      // ===== GRÁFICOS =====
+      function inicializarGraficos() {
+        const ctx = document.getElementById("graficoCombinado");
+        if (!ctx) return;
+
+        new Chart(ctx.getContext("2d"), {
+          type: "bar",
+          data: {
+            labels: ["Segunda", "Terça", "Quarta", "Quinta", "Sexta"],
+            datasets: [
+              {
+                label: "Peças Processadas",
+                data: [120, 150, 180, 200, 170],
+                backgroundColor: "#3b82f6",
+                borderRadius: 6,
+                barPercentage: 0.7,
+              },
+              {
+                label: "Taxa de Acerto (%)",
+                data: [95, 97, 96, 98, 97],
+                type: "line",
+                borderColor: "#10b981",
+                backgroundColor: "rgba(16, 185, 129, 0.1)",
+                borderWidth: 3,
+                tension: 0.4,
+                fill: true,
+                yAxisID: "y1",
+              },
+            ],
+          },
+          options: {
+            responsive: true,
+            interaction: {
+              mode: "index",
+              intersect: false,
+            },
+            plugins: {
+              legend: {
+                position: "top",
+              },
+              title: {
+                display: true,
+                text: "Desempenho Semanal do Sistema",
+              },
+            },
+            scales: {
+              x: {
+                grid: {
+                  display: false,
+                },
+              },
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: "Peças Processadas",
+                },
+                grid: {
+                  color: "rgba(0, 0, 0, 0.05)",
+                },
+              },
+              y1: {
+                position: "right",
+                beginAtZero: true,
+                max: 100,
+                title: {
+                  display: true,
+                  text: "Taxa de Acerto (%)",
+                },
+                grid: {
+                  drawOnChartArea: false,
+                },
+              },
+            },
+          },
+        });
+      }
+
+      // ===== FUNÇÕES UTILITÁRIAS =====
+      function formatarData(data) {
+        return new Date(data).toLocaleDateString("pt-BR", {
+          day: "2-digit",
+          month: "2-digit",
+          year: "numeric",
+          hour: "2-digit",
+          minute: "2-digit",
+        });
+      }
+
+      function mostrarNotificacao(mensagem, tipo = "info") {
+        const cores = {
+          success: "#10b981",
+          error: "#ef4444",
+          warning: "#f59e0b",
+          info: "#3b82f6",
+        };
+
+        const notificacao = document.createElement("div");
+        notificacao.textContent = mensagem;
+        notificacao.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: ${cores[tipo] || cores.info};
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 9999;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                animation: slideIn 0.3s ease;
+            `;
+
+        document.body.appendChild(notificacao);
+
+        setTimeout(() => {
+          notificacao.style.animation = "slideOut 0.3s ease";
+          setTimeout(() => notificacao.remove(), 300);
+        }, 3000);
+      }
+
+      // Adicionar estilos de animação para notificações
+      const style = document.createElement("style");
+      style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes slideOut {
+                from { transform: translateX(0); opacity: 1; }
+                to { transform: translateX(100%); opacity: 0; }
+            }
+        `;
+      document.head.appendChild(style);
+
+      document
+        .getElementById("btn-salvar-config")
+        .addEventListener("click", () => {
+          const velocidade = parseFloat(
+            document.getElementById("config-velocidade").value
+          );
+          const timeout = parseInt(
+            document.getElementById("config-timeout").value
+          );
+
+          if (isNaN(velocidade) || isNaN(timeout)) {
+            mostrarNotificacao(
+              "Preencha todos os campos corretamente!",
+              "error"
+            );
+            return;
+          }
+
+          // Aqui você pode salvar no banco ou localStorage
+          console.log("Velocidade salva:", velocidade);
+          console.log("Timeout salvo:", timeout);
+
+          mostrarNotificacao("Configurações salvas com sucesso!", "success");
+        });
+    </script>
+  </body>
+</html>
